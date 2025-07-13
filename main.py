@@ -79,7 +79,12 @@ def main():
         else:
             raise Exception('Invalid mode')
 
-        trainer.start_train()
+        try:
+            trainer.start_train()
+        except Exception as e:
+            import pdb
+            pdb.post_mortem()
+            raise
 
     elif args.mode in 'inference':
         inferencer = Inferencer(args)

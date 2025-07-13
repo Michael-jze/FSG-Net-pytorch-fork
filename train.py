@@ -13,6 +13,7 @@ from models import model_implements
 from models import losses as loss_hub
 from models import metrics
 from models import utils
+from tqdm import tqdm
 
 
 class Trainer_seg:
@@ -105,8 +106,8 @@ class Trainer_seg:
         batch_losses = []
         f1_list = []
 
-        self.logger.info('Start Train')
-        for batch_idx, (x_in, target) in enumerate(self.loader_train.Loader):
+        self.logger.info("starting training")
+        for batch_idx, (x_in, target) in tqdm(enumerate(self.loader_train.Loader)):
             self.callback.iteration_callback()
             if self.args.cuda and (x_in[0].shape[0] / torch.cuda.device_count()) <= torch.cuda.device_count():   # if has 1 batch per GPU
                 break   # avoid BN issue
@@ -165,8 +166,9 @@ class Trainer_seg:
         model.eval()
         f1_list = []
 
+        self.logger.info("starting validation")
         with torch.no_grad():
-            for batch_idx, (x_in, target) in enumerate(self.loader_val.Loader):
+            for batch_idx, (x_in, target) in tqdm(enumerate(self.loader_val.Loader)):
                 x_in, _ = x_in
                 target, _ = target
                 x_in = x_in.to(self.device)
