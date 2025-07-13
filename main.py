@@ -61,15 +61,17 @@ def main():
 
     args = argparse.Namespace()
     conf_to_args(args, **conf)  # pass in keyword args
+    args.cuda = args.cuda and is_available()
 
     now_time = datetime.now().strftime("%Y-%m-%d %H%M%S")
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.CUDA_VISIBLE_DEVICES
+    if args.cuda:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.CUDA_VISIBLE_DEVICES
 
     if args.debug:
         args.wandb = False
 
-    print('Use CUDA :', args.cuda and is_available())
+    print('Use CUDA :', args.cuda)
     if args.mode in 'train':
         if args.mode == 'train':
             if args.task == 'segmentation':

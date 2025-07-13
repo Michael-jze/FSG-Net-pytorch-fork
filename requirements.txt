@@ -1,0 +1,12 @@
+tensorboard
+torch
+torchmetrics
+torchvision
+scipy 
+numpy<2.0
+opencv-python
+scikit-learn 
+Pillow 
+wandb 
+pyyaml 
+timm

@@ -5,6 +5,7 @@ import wandb
 import numpy as np
 import sys
 import math
+import logging
 
 from models import dataloader as dataloader_hub
 from models import lr_scheduler
@@ -15,7 +16,24 @@ from models import utils
 
 
 class Trainer_seg:
+
+    def init_logger(self):
+        logger = logging.getLogger('Trainer_seg')
+        logger.setLevel(logging.INFO)
+        console_handler = logging.StreamHandler()
+        file_handler = logging.FileHandler('app.log')
+        console_handler.setLevel(logging.INFO)
+        file_handler.setLevel(logging.INFO) 
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        console_handler.setFormatter(formatter)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+        logger.addHandler(file_handler)
+        self.logger = logger
+    
     def __init__(self, args, now_time=None):
+        self.init_logger()
+        self.logger.info("init Trainer_seg")
         self.start_time = time.time()
         self.args = args
 
@@ -55,7 +73,7 @@ class Trainer_seg:
         if hasattr(self.args, 'model_path'):
             if self.args.model_path != '':
                 self.model.load_state_dict(torch.load(self.args.model_path), strict=False)
-                print('Model loaded successfully!!! (Custom)')
+                self.logger.info('Model loaded successfully!!! (Custom)')
                 self.model.to(self.device)
 
         self.criterion = self.__init_criterion(self.args.criterion)
@@ -75,21 +93,22 @@ class Trainer_seg:
         self.callback = utils.TrainerCallBack()
         if hasattr(self.model.module, 'train_callback'):
             self.callback.train_callback = self.model.module.train_callback
-            print('train_callback adapted.')
+            self.logger.info('train_callback adapted.')
         if hasattr(self.model.module, 'iteration_callback'):
             self.callback.iteration_callback = self.model.module.iteration_callback
-            print('iteration_callback adapted.')
+            self.logger.info('iteration_callback adapted.')
 
     def _train(self, epoch):
+        self.logger.info("train model")
         self.model.train()
         self.callback.train_callback()
         batch_losses = []
         f1_list = []
 
-        print('Start Train')
+        self.logger.info('Start Train')
         for batch_idx, (x_in, target) in enumerate(self.loader_train.Loader):
             self.callback.iteration_callback()
-            if (x_in[0].shape[0] / torch.cuda.device_count()) <= torch.cuda.device_count():   # if has 1 batch per GPU
+            if self.args.cuda and (x_in[0].shape[0] / torch.cuda.device_count()) <= torch.cuda.device_count():   # if has 1 batch per GPU
                 break   # avoid BN issue
 
             x_in, _ = x_in
@@ -123,20 +142,20 @@ class Trainer_seg:
                 if batch_idx != 0 and (batch_idx % self.__validate_interval) == 0:
                     self._validate(self.model, epoch)
 
-            if (batch_idx != 0) and (batch_idx % (self.args.log_interval // self.args.batch_size) == 0):
-                loss_mean = np.mean(batch_losses)
-                print('{} epoch / Train Loss {} : {}, lr {}'.format(epoch,
-                                                                    self.args.criterion,
-                                                                    loss_mean,
-                                                                    self.optimizer.param_groups[0]['lr']))
+            # if (batch_idx != 0) and (batch_idx % self.args.log_interval == 0):
+            loss_mean = np.mean(batch_losses)
+            self.logger.info('{} epoch / batch_idx: {} Train Loss {} : {}, lr {}'.format(epoch,batch_idx,
+                                                                self.args.criterion,
+                                                                loss_mean,
+                                                                self.optimizer.param_groups[0]['lr']))
 
         loss_mean = np.mean(batch_losses)
-        print('{} epoch / Train Loss {} : {}, lr {}'.format(epoch,
+        self.logger.info('{} epoch / Train Loss {} : {}, lr {}'.format(epoch,
                                                             self.args.criterion,
                                                             loss_mean,
                                                             self.optimizer.param_groups[0]['lr']))
         f1_score = sum(f1_list) / len(f1_list)
-        print('{} epoch / Train f1_score: {}'.format(epoch, f1_score))
+        self.logger.info('{} epoch / Train f1_score: {}'.format(epoch, f1_score))
         if self.args.wandb:
             wandb.log({'Train Loss {}'.format(self.args.criterion): loss_mean,
                        'Train f1_score': f1_score},
@@ -163,7 +182,7 @@ class Trainer_seg:
                 f1_list.append(metric_result['f1'])
 
         f1_score = sum(f1_list) / len(f1_list)
-        print('{} epoch / Val f1_score: {}'.format(epoch, f1_score))
+        self.logger.info('{} epoch / Val f1_score: {}'.format(epoch, f1_score))
         if self.args.wandb:
             wandb.log({'Val f1_score': f1_score},
                       step=epoch)
@@ -176,8 +195,8 @@ class Trainer_seg:
                 self.save_model(model, self.args.model_name, epoch, model_metrics[key], best_flag=True, metric_name=key)
 
         if (epoch - self.last_saved_epoch) > self.args.cycles * 4:
-            print('The model seems to be converged. Early stop training.')
-            print(f'Best F1 -----> {self.metric_best["f1_score"]}')
+            self.logger.info('The model seems to be converged. Early stop training.')
+            self.logger.info(f'Best F1 -----> {self.metric_best["f1_score"]}')
             wandb.log({f'Best F1': self.metric_best['f1_score']},
                       step=epoch)
             sys.exit()  # safe exit
@@ -187,7 +206,7 @@ class Trainer_seg:
             self._train(epoch)
             self._validate(self.model, epoch)
 
-            print('### {} / {} epoch ended###'.format(epoch, self.args.epoch))
+            self.logger.info('### {} / {} epoch ended###'.format(epoch, self.args.epoch))
 
     def save_model(self, model, model_name, epoch, metric=None, best_flag=False, metric_name='metric'):
         file_path = self.saved_model_directory + '/'
@@ -205,7 +224,7 @@ class Trainer_seg:
         torch.save(model.state_dict(), file_format)
 
 
-        print(file_format + '\t model saved!!')
+        self.logger.info(file_format + '\t model saved!!')
         self.last_saved_epoch = epoch
 
     def __init_data_loader(self,
