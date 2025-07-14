@@ -21,7 +21,9 @@
   input_channel: 3,
   input_size: [1024, 1024],  # DRIVE:608, STARE:704, CHASE_DB1:1024, HRF: 1344
 
-  model_path: '/path/to/model.pt',
-  val_x_path: '/path/to/val/input',
-  val_y_path: '/path/to/val/label',
+  # model_path: 'model_ckpts/2025-07-14 180735/FSGNet-Epoch_16-f1_score_0.6528536891665147.pt',
+  # model_path: 'model_ckpts/2025-07-14 180922/FSGNet-Epoch_48-f1_score_0.7325466822955726.pt',
+  model_path: 'model_ckpts/best_inner.ckpt',
+  val_x_path: 'dataset/CHASE_DB1/inputs',
+  val_y_path: 'dataset/CHASE_DB1/labels',
 }

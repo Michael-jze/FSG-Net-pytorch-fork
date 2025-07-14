@@ -105,8 +105,6 @@ class Trainer_seg:
         self.callback.train_callback()
         batch_losses = []
         f1_list = []
-
-        self.logger.info("starting training")
         for batch_idx, (x_in, target) in tqdm(enumerate(self.loader_train.Loader)):
             self.callback.iteration_callback()
             if self.args.cuda and (x_in[0].shape[0] / torch.cuda.device_count()) <= torch.cuda.device_count():   # if has 1 batch per GPU
@@ -143,9 +141,9 @@ class Trainer_seg:
                 if batch_idx != 0 and (batch_idx % self.__validate_interval) == 0:
                     self._validate(self.model, epoch)
 
-            # if (batch_idx != 0) and (batch_idx % self.args.log_interval == 0):
-            loss_mean = np.mean(batch_losses)
-            self.logger.info('{} epoch / batch_idx: {} Train Loss {} : {}, lr {}'.format(epoch,batch_idx,
+            if (batch_idx != 0) and (batch_idx % self.args.log_interval == 0):
+                loss_mean = np.mean(batch_losses)
+                self.logger.info('{} epoch / batch_idx: {} Train Loss {} : {}, lr {}'.format(epoch,batch_idx,
                                                                 self.args.criterion,
                                                                 loss_mean,
                                                                 self.optimizer.param_groups[0]['lr']))
