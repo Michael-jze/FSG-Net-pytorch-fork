@@ -11,6 +11,6 @@ git-token
 *.pyc
 
 **/__pycache__/**
-/dataset
+# /dataset
 /model_ckpts
 *.log

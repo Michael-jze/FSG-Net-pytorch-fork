@@ -47,6 +47,6 @@
 
   train_x_path: 'dataset/CHASE_DB1/inputs',
   train_y_path: 'dataset/CHASE_DB1/labels',
-  # val_x_path: 'dataset/CHASE_DB1/inputs',
-  # val_y_path: 'dataset/CHASE_DB1/labels',
+  val_x_path: 'dataset/CHASE_DB1_VAL/inputs',
+  val_y_path: 'dataset/CHASE_DB1_VAL/labels',
 }

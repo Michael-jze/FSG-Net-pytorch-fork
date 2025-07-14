@@ -6,12 +6,12 @@
   pin_memory: true,
   wandb: true,
   worker: 8,
-  log_interval: 9999,
-  save_interval: 1,
+  log_interval: 1,
+  save_interval: 100,
   saved_model_directory: 'model_ckpts',
   train_fold: 1,
   project_name: 'FSG-Net',
-  CUDA_VISIBLE_DEVICES: '2',
+  CUDA_VISIBLE_DEVICES: '0',
 
   ### Train Parameters
   model_name: 'FSGNet',
@@ -22,7 +22,7 @@
   task: 'segmentation',
   input_space: 'RGB',
   input_channel: 3,
-  input_size: [608, 608],  # [h, w] DRIVE:608, STARE:704, CHASE_DB1:1024, HRF:1344
+  input_size: [1024, 1024],  # [h, w] DRIVE:608, STARE:704, CHASE_DB1:1024, HRF:1344
   optimizer: 'AdamW',
     lr: 0.001,
     scheduler: 'WarmupCosine',  # ConstantLRSchedule, WarmupCosine
@@ -45,8 +45,8 @@
   transform_rand_resize: true,
   transform_rand_crop: 288,
 
-  train_x_path: '/path/to/train/input',
-  train_y_path: '/path/to/train/label',
-  val_x_path: '/path/to/val/input',
-  val_y_path: '/path/to/val/label',
+  train_x_path: 'dataset/CHASE_DB1/inputs',
+  train_y_path: 'dataset/CHASE_DB1/labels',
+  val_x_path: 'dataset/CHASE_DB1_VAL/inputs',
+  val_y_path: 'dataset/CHASE_DB1_VAL/labels',
 }
